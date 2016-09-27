@@ -9,7 +9,7 @@ $OnPremUsername = ""
 $OnPremPassword = ""
 $MailboxToMove = ""
 $RemoteHostName = ""
-$TargetDeliveryDomain = "" + mail.onmicrosoft.com
+$TargetDeliveryDomain = "" + ".mail.onmicrosoft.com"
 
 $O365SecurePassword = $O365Password | ConvertTo-SecureString -AsPlainText -Force
 $OnPremSecurePassword = $OnPremPassword | ConvertTo-SecureString -AsPlainText -Force
@@ -21,3 +21,15 @@ Import-PSSession $SESSION
 Connect-MsolService -Credential $O365CREDS
 
 New-MoveRequest -Identity $MailboxToMove -Remote -RemoteHostName $RemoteHostName -TargetDeliveryDomain $TargetDeliveryDomain -RemoteCredential $OnPremCREDS -BadItemLimit 100
+
+Do
+{
+  Start-Sleep -s 10
+  Write-Host "Migration not completed yet.. still waiting..."
+  $Status = Get-MoveRequest | Where-Object {$_.Alias -like $MailboxAliasToMove} | Select Status
+}
+While($Status -ne "Completed")
+
+Write-Host "Migration completed."
+
+Get-MoveRequest | Where-Object {$_.Alias -like $MailboxAliasToMove}
