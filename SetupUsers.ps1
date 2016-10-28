@@ -28,6 +28,7 @@ $OnPremCREDS = New-Object System.Management.Automation.PSCredential($OnPremUsern
 $SESSION = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://ps.outlook.com/powershell -Authentication Basic -AllowRedirection -Credential $O365CREDS
 Import-PSSession $SESSION
 Connect-MsolService -Credential $O365CREDS
+Write-Host "Connected to Office 365"
 
 ForEach($User in $Users) {
   $Username = $User.Username
@@ -44,12 +45,15 @@ ForEach($User in $Users) {
   $ChangePasswordAtLogon = $True
   $PasswordNeverExpires = $False
 
+  Write-Host "Creating user: $GivenName $Surname"
   New-ADUser -Name $DisplayName -UserPrincipalName $UserPrincipalName -SamAccountName $Username -GivenName $GivenName -DisplayName `
     $DisplayName -SurName $Surname -Title $Title -Company $Company -Path $Path -AccountPassword $SecurePassword `
   	-Enabled $True -PasswordNeverExpires $PasswordNeverExpires -ChangePasswordAtLogon $ChangePasswordAtLogon
 
+  Write-Host "Creating mailbox for $GivenName $Surname"
   Enable-Mailbox $UserPrincipalName -Database $MailboxDatabase
 
+  Write-Host "Migrating mailbox for $GivenName $Surname"
   New-MoveRequest -Identity $Username -Remote -RemoteHostName $RemoteHostName -TargetDeliveryDomain $TargetDeliveryDomain -RemoteCredential $OnPremCREDS -BadItemLimit 100
 
   Do
